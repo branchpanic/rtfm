@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        maven {
+            name = "Forge"
+            url = "https://files.minecraftforge.net/maven/"
+        }
+
+        maven {
+            name = "Jitpack"
+            url = "https://jitpack.io/"
+        }
+
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+    }
+
+    dependencies {
+        classpath 'com.github.Chocohead:fabric-loom:de18565'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'net.ltgt.apt' version '0.19'
+}
+
+apply plugin: 'fabric-loom'
+
+group 'me.branchpanic.mods'
+version '0.0.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft 'com.mojang:minecraft:1.14.2'
+    mappings 'net.fabricmc:yarn:1.14.2+build.1'
+    modCompile 'net.fabricmc:fabric-loader:0.4.8+build.154'
+
+    implementation 'com.atlassian.commonmark:commonmark:0.12.1'
+    modCompile 'net.fabricmc.fabric-api:fabric-api:0.3.0+build.170'
+
+    apt 'org.immutables:value:2.7.4'
+    implementation 'org.immutables:value-annotations:2.7.4'
+    implementation 'org.immutables:builder:2.7.4'
+    implementation 'org.immutables:gson:2.7.4'
+}
