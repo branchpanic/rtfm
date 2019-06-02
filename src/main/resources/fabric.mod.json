@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "rtfm",
+  "version": "0",
+  "entrypoints": {
+    "client": [
+      "me.branchpanic.mods.rtfm.RtfmMod::INSTANCE"
+    ]
+  }
+}

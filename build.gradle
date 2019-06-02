@@ -45,7 +45,7 @@ dependencies {
     implementation 'com.atlassian.commonmark:commonmark:0.12.1'
     modCompile 'net.fabricmc.fabric-api:fabric-api:0.3.0+build.170'
 
-    apt 'org.immutables:value:2.7.4'
+    annotationProcessor 'org.immutables:value:2.7.4'
     implementation 'org.immutables:value-annotations:2.7.4'
     implementation 'org.immutables:builder:2.7.4'
     implementation 'org.immutables:gson:2.7.4'
