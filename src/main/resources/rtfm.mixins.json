@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "me.branchpanic.mods.rtfm.mixin",
+  "minVersion": "0.7.11",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [
+    "EnhancedContainerScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -6,5 +6,11 @@
     "client": [
       "me.branchpanic.mods.rtfm.RtfmMod::INSTANCE"
     ]
-  }
+  },
+  "requires": {
+    "cloth": ">=0.3.0"
+  },
+  "mixins": [
+    "rtfm.mixins.json"
+  ]
 }

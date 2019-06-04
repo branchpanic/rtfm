@@ -3,9 +3,12 @@ package me.branchpanic.mods.rtfm.impl;
 import me.branchpanic.mods.rtfm.api.DocEntry;
 import me.branchpanic.mods.rtfm.api.DocLoader;
 import net.minecraft.util.Identifier;
+import org.commonmark.parser.Parser;
 import org.immutables.value.Value;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
@@ -21,7 +24,13 @@ public interface DirectoryDocLoader extends DocLoader {
     Path root();
 
     @Override
-    default Optional<DocEntry> retrieve(Identifier name) {
+    default Optional<DocEntry> retrieve(String type, Identifier name) {
+        Path expectedPath = Paths.get(root().toString(), type, name.getNamespace(), name.getPath() + ".md");
+
+        if (Files.exists(expectedPath)) {
+            return Optional.of(new FileDocEntry(Parser.builder().build(), expectedPath));
+        }
+
         return Optional.empty();
     }
 }

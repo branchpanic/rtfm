@@ -1,32 +1,8 @@
-buildscript {
-    repositories {
-        maven {
-            name = "Forge"
-            url = "https://files.minecraftforge.net/maven/"
-        }
-
-        maven {
-            name = "Jitpack"
-            url = "https://jitpack.io/"
-        }
-
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
-    }
-
-    dependencies {
-        classpath 'com.github.Chocohead:fabric-loom:de18565'
-    }
-}
-
 plugins {
     id 'java'
     id 'net.ltgt.apt' version '0.19'
+    id 'fabric-loom' version '0.2.2-SNAPSHOT'
 }
-
-apply plugin: 'fabric-loom'
 
 group 'me.branchpanic.mods'
 version '0.0.0'
@@ -35,15 +11,19 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://minecraft.curseforge.com/api/maven"
+    }
 }
 
 dependencies {
     minecraft 'com.mojang:minecraft:1.14.2'
-    mappings 'net.fabricmc:yarn:1.14.2+build.1'
+    mappings 'net.fabricmc:yarn:1.14.2+build.2'
     modCompile 'net.fabricmc:fabric-loader:0.4.8+build.154'
+    modCompile 'net.fabricmc.fabric-api:fabric-api:0.3.0+build.170'
+    modCompile 'cloth:ClothEvents:0.3.1.23'
 
     implementation 'com.atlassian.commonmark:commonmark:0.12.1'
-    modCompile 'net.fabricmc.fabric-api:fabric-api:0.3.0+build.170'
 
     annotationProcessor 'org.immutables:value:2.7.4'
     implementation 'org.immutables:value-annotations:2.7.4'
