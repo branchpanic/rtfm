@@ -11,6 +11,7 @@ import net.minecraft.client.util.Window;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.opengl.GL11;
 
 public class DocumentationScreen extends Screen {
@@ -21,9 +22,7 @@ public class DocumentationScreen extends Screen {
 
     public static final int BOX_LEFT = 54;
     public static final int BOX_TOP = 0;
-    public static final int CONTENT_PADDING = 4;
-
-    public static final int NINEPATCH_DECORATION_SIZE = 5;
+    public static final int CONTENT_PADDING = 5;
 
     public static final float HORIZONTAL_MARGIN_FACTOR = 0.2f;
     public static final float VERTICAL_MARGIN_FACTOR = 0.1f;
@@ -37,7 +36,9 @@ public class DocumentationScreen extends Screen {
     private MarkdownView view;
 
     private int left;
+    private int right;
     private int top;
+    private int bottom;
 
     private int textLeft;
     private int textTop;
@@ -68,18 +69,23 @@ public class DocumentationScreen extends Screen {
                 .build();
     }
 
+    private int maxTextColumnWidth() {
+        return font.getStringWidth(StringUtils.repeat("@", 75));
+    }
+
     @Override
     protected void init() {
         super.init();
 
         left = (int) (HORIZONTAL_MARGIN_FACTOR * width);
         top = (int) (VERTICAL_MARGIN_FACTOR * height);
+        right = width - left;
+        bottom = height - top;
 
         textLeft = left + BOX_LEFT + CONTENT_PADDING + textRectangle.borderSize();
         textTop = top + BOX_TOP + CONTENT_PADDING + textRectangle.borderSize();
-
-        textWidth = (width - left) - BOX_LEFT - 4;
-        textHeight = (height - top) - top - (2 * NINEPATCH_DECORATION_SIZE) - 8;
+        textWidth = Math.min(right - CONTENT_PADDING - textRectangle.borderSize(), maxTextColumnWidth());
+        textHeight = bottom - CONTENT_PADDING - textRectangle.borderSize();
 
         view = new MarkdownView(textStyle, entry.node(), new StatefulTextRenderer(textStyle, font, textLeft, textTop, textWidth));
     }
@@ -95,9 +101,6 @@ public class DocumentationScreen extends Screen {
             font.draw(sizeMessage, (width - size) / 2f, (height - font.fontHeight) / 2f, 0xFFFFFFFF);
             return;
         }
-
-        int right = width - left;
-        int bottom = height - top;
 
         textRectangle.draw(this, left + BOX_LEFT, top, (right - (left + BOX_LEFT)), (bottom - top));
 
@@ -136,6 +139,11 @@ public class DocumentationScreen extends Screen {
         GlStateManager.popMatrix();
 
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
+    }
+
+    public int screenToWindowX(int x) {
+        Window window = MinecraftClient.getInstance().window;
+        return (int) (window.getWidth() * (x / (float) window.getScaledWidth()));
     }
 
     @Override
