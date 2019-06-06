@@ -1,6 +1,7 @@
-package me.branchpanic.mods.rtfm.gui;
+package me.branchpanic.mods.rtfm.gui.text;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import me.branchpanic.mods.rtfm.gui.TextStyle;
 import net.minecraft.ChatFormat;
 import net.minecraft.client.font.TextRenderer;
 import org.apache.commons.lang3.StringUtils;
@@ -9,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
  * A StatefulTextRenderer wraps a TextRenderer for use at a high level.
  */
 public class StatefulTextRenderer {
-    private final Theme theme;
+    private final TextStyle textStyle;
     private final TextRenderer textRenderer;
 
     private final float minX;
@@ -27,8 +28,8 @@ public class StatefulTextRenderer {
 
     private int indent;
 
-    public StatefulTextRenderer(Theme theme, TextRenderer textRenderer, float minX, float minY, float maxX) {
-        this.theme = theme;
+    public StatefulTextRenderer(TextStyle textStyle, TextRenderer textRenderer, float minX, float minY, float maxX) {
+        this.textStyle = textStyle;
         this.textRenderer = textRenderer;
         this.minX = minX;
         this.minY = minY;
@@ -43,7 +44,7 @@ public class StatefulTextRenderer {
         }
 
         lastX = minX;
-        lastY += textRenderer.fontHeight * scale + theme.lineSpacingPx();
+        lastY += textRenderer.fontHeight * scale + textStyle.lineSpacingPx();
     }
 
     public void newBlock() {
@@ -52,7 +53,7 @@ public class StatefulTextRenderer {
         }
 
         lastX = minX;
-        lastY += textRenderer.fontHeight * scale + theme.blockSpacingPx();
+        lastY += textRenderer.fontHeight * scale + textStyle.blockSpacingPx();
     }
 
     public void setIndent(int indent) {

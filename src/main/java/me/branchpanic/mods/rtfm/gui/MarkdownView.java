@@ -1,16 +1,17 @@
 package me.branchpanic.mods.rtfm.gui;
 
+import me.branchpanic.mods.rtfm.gui.text.StatefulTextRenderer;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import org.commonmark.node.*;
 
 public class MarkdownView extends AbstractVisitor implements Drawable, Element {
-    private final Theme theme;
+    private final TextStyle textStyle;
     private final StatefulTextRenderer textRenderer;
     private final Node node;
 
-    public MarkdownView(Theme theme, Node node, StatefulTextRenderer textRenderer) {
-        this.theme = theme;
+    public MarkdownView(TextStyle textStyle, Node node, StatefulTextRenderer textRenderer) {
+        this.textStyle = textStyle;
         this.node = node;
         this.textRenderer = textRenderer;
     }
@@ -23,7 +24,7 @@ public class MarkdownView extends AbstractVisitor implements Drawable, Element {
         }
 
         if (previous instanceof Heading) {
-            textRenderer.setScale(theme.headingScales().getOrDefault(((Heading) previous).getLevel(), 1f));
+            textRenderer.setScale(textStyle.headingScales().getOrDefault(((Heading) previous).getLevel(), 1f));
         }
 
         textRenderer.newBlock();
@@ -99,7 +100,7 @@ public class MarkdownView extends AbstractVisitor implements Drawable, Element {
     @Override
     public void visit(Heading heading) {
         beginBlock(heading);
-        textRenderer.setScale(theme.headingScales().getOrDefault(heading.getLevel(), 1f));
+        textRenderer.setScale(textStyle.headingScales().getOrDefault(heading.getLevel(), 1f));
         visitChildren(heading);
         textRenderer.setScale(1f);
     }

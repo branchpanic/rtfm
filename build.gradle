@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'net.ltgt.apt' version '0.19'
+    id 'idea'
     id 'fabric-loom' version '0.2.2-SNAPSHOT'
 }
 

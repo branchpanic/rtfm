@@ -2,7 +2,7 @@ package me.branchpanic.mods.rtfm.gui;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.branchpanic.mods.rtfm.api.DocEntry;
-import me.branchpanic.mods.rtfm.gui.ImmutableTheme;
+import me.branchpanic.mods.rtfm.gui.text.StatefulTextRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.GuiLighting;
@@ -19,37 +19,20 @@ public class DocumentationScreen extends Screen {
     public static final int CORE_BACKGROUND_WIDTH = 177;
     public static final int CORE_BACKGROUND_HEIGHT = 50;
 
-    public static final int BOX_LEFT = 59;
-    public static final int BOX_TOP = 5;
-
-    public static final int NINEPATCH_TOP_EDGE_START_X = CORE_BACKGROUND_WIDTH;
-    public static final int NINEPATCH_TOP_EDGE_START_Y = 0;
-    public static final int NINEPATCH_LEFT_EDGE_START_X = 54;
-    public static final int NINEPATCH_LEFT_EDGE_START_Y = 50;
+    public static final int BOX_LEFT = 54;
+    public static final int BOX_TOP = 0;
+    public static final int CONTENT_PADDING = 4;
 
     public static final int NINEPATCH_DECORATION_SIZE = 5;
-    public static final int NINEPATCH_BOTTOM_LEFT_U = 0;
-    public static final int NINEPATCH_BOTTOM_LEFT_V = 56;
-    public static final int NINEPATCH_BOTTOM_RIGHT_U = 6;
-    public static final int NINEPATCH_BOTTOM_RIGHT_V = 56;
-    public static final int NINEPATCH_TOP_RIGHT_U = 6;
-    public static final int NINEPATCH_TOP_RIGHT_V = 50;
-    public static final int NINEPATCH_LEFT_EDGE_U = 0;
-    public static final int NINEPATCH_LEFT_EDGE_V = 55;
-    public static final int NINEPATCH_RIGHT_EDGE_U = 6;
-    public static final int NINEPATCH_RIGHT_EDGE_V = 55;
-    public static final int NINEPATCH_BOTTOM_EDGE_U = 5;
-    public static final int NINEPATCH_BOTTOM_EDGE_V = 56;
-    public static final int NINEPATCH_TOP_EDGE_U = 5;
-    public static final int NINEPATCH_TOP_EDGE_V = 50;
-
-    public static final int NINEPATCH_FILL_COLOR = 0xFF212121;
 
     public static final float HORIZONTAL_MARGIN_FACTOR = 0.2f;
     public static final float VERTICAL_MARGIN_FACTOR = 0.1f;
 
     private final DocEntry entry;
     private final ItemStack representation;
+
+    private final NinePatchRectangle textRectangle;
+    private final TextStyle textStyle;
 
     private MarkdownView view;
 
@@ -67,13 +50,8 @@ public class DocumentationScreen extends Screen {
         super(new TextComponent("RTFM Documentation"));
         this.entry = entry;
         this.representation = representation;
-    }
 
-    @Override
-    protected void init() {
-        super.init();
-
-        Theme t = ImmutableTheme.builder()
+        textStyle = ImmutableTextStyle.builder()
                 .lineSpacingPx(1.5f)
                 .blockSpacingPx(6f)
                 .putHeadingScales(1, 1.75f)
@@ -81,55 +59,29 @@ public class DocumentationScreen extends Screen {
                 .putHeadingScales(3, 1.25f)
                 .build();
 
+        textRectangle = ImmutableNinePatchRectangle.builder()
+                .originU(0)
+                .originV(50)
+                .borderSize(5)
+                .fillColor(0xFF212121)
+                .sprite(BACKGROUND_TEXTURE)
+                .build();
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+
         left = (int) (HORIZONTAL_MARGIN_FACTOR * width);
         top = (int) (VERTICAL_MARGIN_FACTOR * height);
 
-        textLeft = left + BOX_LEFT + 4;
-        textTop = top + BOX_TOP + 4;
+        textLeft = left + BOX_LEFT + CONTENT_PADDING + textRectangle.borderSize();
+        textTop = top + BOX_TOP + CONTENT_PADDING + textRectangle.borderSize();
+
         textWidth = (width - left) - BOX_LEFT - 4;
         textHeight = (height - top) - top - (2 * NINEPATCH_DECORATION_SIZE) - 8;
 
-        view = new MarkdownView(t, entry.node(), new StatefulTextRenderer(t, font, textLeft, textTop, textWidth));
-    }
-
-    public void drawTextBoxBackground() {
-        int right = width - left;
-        int bottom = height - top;
-
-        MinecraftClient.getInstance().getTextureManager().bindTexture(BACKGROUND_TEXTURE);
-        blit(left, top, 0, 0, CORE_BACKGROUND_WIDTH, CORE_BACKGROUND_HEIGHT);
-
-        // Top edge
-
-        for (int i = left + NINEPATCH_TOP_EDGE_START_X; i < right - NINEPATCH_DECORATION_SIZE; i++) {
-            blit(i, top + NINEPATCH_TOP_EDGE_START_Y, NINEPATCH_TOP_EDGE_U, NINEPATCH_TOP_EDGE_V, 1, NINEPATCH_DECORATION_SIZE);
-        }
-
-        // Bottom edge
-
-        for (int i = left + NINEPATCH_LEFT_EDGE_START_X + NINEPATCH_DECORATION_SIZE; i < right - NINEPATCH_DECORATION_SIZE; i++) {
-            blit(i, bottom - NINEPATCH_DECORATION_SIZE, NINEPATCH_BOTTOM_EDGE_U, NINEPATCH_BOTTOM_EDGE_V, 1, NINEPATCH_DECORATION_SIZE);
-        }
-
-        // Left edge
-
-        for (int i = top + NINEPATCH_LEFT_EDGE_START_Y; i < bottom - NINEPATCH_DECORATION_SIZE; i++) {
-            blit(left + NINEPATCH_LEFT_EDGE_START_X, i, NINEPATCH_LEFT_EDGE_U, NINEPATCH_LEFT_EDGE_V, NINEPATCH_DECORATION_SIZE, 1);
-        }
-
-        // Right edge
-
-        for (int i = top + NINEPATCH_DECORATION_SIZE; i < bottom - NINEPATCH_DECORATION_SIZE; i++) {
-            blit(right - NINEPATCH_DECORATION_SIZE, i, NINEPATCH_RIGHT_EDGE_U, NINEPATCH_RIGHT_EDGE_V, NINEPATCH_DECORATION_SIZE, 1);
-        }
-
-        // Corners
-
-        blit(right - NINEPATCH_DECORATION_SIZE, top, NINEPATCH_TOP_RIGHT_U, NINEPATCH_TOP_RIGHT_V, NINEPATCH_DECORATION_SIZE, NINEPATCH_DECORATION_SIZE);
-        blit(right - NINEPATCH_DECORATION_SIZE, bottom - NINEPATCH_DECORATION_SIZE, NINEPATCH_BOTTOM_RIGHT_U, NINEPATCH_BOTTOM_RIGHT_V, NINEPATCH_DECORATION_SIZE, NINEPATCH_DECORATION_SIZE);
-        blit(left + NINEPATCH_LEFT_EDGE_START_X, bottom - NINEPATCH_DECORATION_SIZE, NINEPATCH_BOTTOM_LEFT_U, NINEPATCH_BOTTOM_LEFT_V, NINEPATCH_DECORATION_SIZE, NINEPATCH_DECORATION_SIZE);
-
-        fill(left + BOX_LEFT, top + BOX_TOP, right - NINEPATCH_DECORATION_SIZE, bottom - NINEPATCH_DECORATION_SIZE, NINEPATCH_FILL_COLOR);
+        view = new MarkdownView(textStyle, entry.node(), new StatefulTextRenderer(textStyle, font, textLeft, textTop, textWidth));
     }
 
     @Override
@@ -144,7 +96,13 @@ public class DocumentationScreen extends Screen {
             return;
         }
 
-        drawTextBoxBackground();
+        int right = width - left;
+        int bottom = height - top;
+
+        textRectangle.draw(this, left + BOX_LEFT, top, (right - (left + BOX_LEFT)), (bottom - top));
+
+        MinecraftClient.getInstance().getTextureManager().bindTexture(BACKGROUND_TEXTURE);
+        blit(left, top, 0, 0, CORE_BACKGROUND_WIDTH, CORE_BACKGROUND_HEIGHT);
 
         GuiLighting.enable();
 

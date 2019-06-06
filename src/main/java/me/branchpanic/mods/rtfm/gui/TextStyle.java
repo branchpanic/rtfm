@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 import java.util.Map;
 
 @Value.Immutable
-public interface Theme {
+public interface TextStyle {
     float lineSpacingPx();
 
     float blockSpacingPx();
