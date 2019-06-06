@@ -139,11 +139,16 @@ public class DocumentationScreen extends Screen {
         GlStateManager.popMatrix();
 
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
+
+        if (offsetY != 0) {
+            drawDashedHorizontalLine(textLeft, textTop - 3, textWidth, 0xFF313131);
+        }
     }
 
-    public int screenToWindowX(int x) {
-        Window window = MinecraftClient.getInstance().window;
-        return (int) (window.getWidth() * (x / (float) window.getScaledWidth()));
+    private void drawDashedHorizontalLine(int x, int y, int length, int color) {
+        for (int i = x; i + 4 < length; i += 6) {
+            fill(i, y, i + 4, y + 1, color);
+        }
     }
 
     @Override
