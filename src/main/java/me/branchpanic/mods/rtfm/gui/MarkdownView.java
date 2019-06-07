@@ -6,14 +6,25 @@ import net.minecraft.client.gui.Element;
 import org.commonmark.node.*;
 
 public class MarkdownView extends AbstractVisitor implements Drawable, Element {
-    private final TextStyle textStyle;
-    private final StatefulTextRenderer textRenderer;
+    private final TextStyle style;
+    private final StatefulTextRenderer renderer;
     private final Node node;
 
-    public MarkdownView(TextStyle textStyle, Node node, StatefulTextRenderer textRenderer) {
-        this.textStyle = textStyle;
+    private int cachedHeight = -1;
+
+    public MarkdownView(TextStyle style, Node node, StatefulTextRenderer renderer) {
+        this.style = style;
         this.node = node;
-        this.textRenderer = textRenderer;
+        this.renderer = renderer;
+    }
+
+    public int calculateHeight() {
+        renderer.reset();
+        renderer.setSimulate(true);
+        visitChildren(node);
+        int result = (int) Math.ceil(renderer.getCaretY());
+        renderer.setSimulate(false);
+        return result;
     }
 
     private void beginBlock(Node node) {
@@ -24,11 +35,11 @@ public class MarkdownView extends AbstractVisitor implements Drawable, Element {
         }
 
         if (previous instanceof Heading) {
-            textRenderer.setScale(textStyle.headingScales().getOrDefault(((Heading) previous).getLevel(), 1f));
+            renderer.setScale(style.headingScales().getOrDefault(((Heading) previous).getLevel(), 1f));
         }
 
-        textRenderer.newBlock();
-        textRenderer.setScale(1f);
+        renderer.newBlock();
+        renderer.setScale(1f);
     }
 
     private void beginInlineBlock(Node node) {
@@ -39,18 +50,18 @@ public class MarkdownView extends AbstractVisitor implements Drawable, Element {
         }
 
         if (previous instanceof Text) {
-            textRenderer.write(" ");
+            renderer.write(" ");
         }
     }
 
     @Override
     public void visit(SoftLineBreak softLineBreak) {
-        textRenderer.write(" ");
+        renderer.write(" ");
     }
 
     @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
-        textRenderer.reset();
+        renderer.reset();
         visitChildren(node);
     }
 
@@ -63,55 +74,55 @@ public class MarkdownView extends AbstractVisitor implements Drawable, Element {
     @Override
     public void visit(Text text) {
         beginInlineBlock(text);
-        textRenderer.writeBlock(text.getLiteral());
+        renderer.writeBlock(text.getLiteral());
         visitChildren(text);
     }
 
     @Override
     public void visit(StrongEmphasis strongEmphasis) {
         beginInlineBlock(strongEmphasis);
-        textRenderer.setBold(true);
+        renderer.setBold(true);
         visitChildren(strongEmphasis);
-        textRenderer.setBold(false);
+        renderer.setBold(false);
     }
 
     @Override
     public void visit(BulletList bulletList) {
-        textRenderer.increaseIndent(2);
-        textRenderer.newBlock();
+        renderer.increaseIndent(2);
+        renderer.newBlock();
         visitChildren(bulletList);
-        textRenderer.decreaseIndent(2);
+        renderer.decreaseIndent(2);
     }
 
     @Override
     public void visit(ListItem listItem) {
-        textRenderer.newLine();
+        renderer.newLine();
         visitChildren(listItem);
     }
 
     @Override
     public void visit(Emphasis emphasis) {
         beginInlineBlock(emphasis);
-        textRenderer.setItalic(true);
+        renderer.setItalic(true);
         visitChildren(emphasis);
-        textRenderer.setItalic(false);
+        renderer.setItalic(false);
     }
 
     @Override
     public void visit(Heading heading) {
         beginBlock(heading);
-        textRenderer.setScale(textStyle.headingScales().getOrDefault(heading.getLevel(), 1f));
+        renderer.setScale(style.headingScales().getOrDefault(heading.getLevel(), 1f));
         visitChildren(heading);
-        textRenderer.setScale(1f);
+        renderer.setScale(1f);
     }
 
     @Override
     public void visit(Link link) {
         beginInlineBlock(link);
-        textRenderer.setUnderline(true);
-        textRenderer.setColor(0xFF4450FF);
+        renderer.setUnderline(true);
+        renderer.setColor(0xFF4450FF);
         visitChildren(link);
-        textRenderer.setColor(0xFFFFFFFF);
-        textRenderer.setUnderline(false);
+        renderer.setColor(0xFFFFFFFF);
+        renderer.setUnderline(false);
     }
 }

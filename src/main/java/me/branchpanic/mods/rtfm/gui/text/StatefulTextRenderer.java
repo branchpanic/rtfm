@@ -6,19 +6,16 @@ import net.minecraft.ChatFormat;
 import net.minecraft.client.font.TextRenderer;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * A StatefulTextRenderer wraps a TextRenderer for use at a high level.
- */
 public class StatefulTextRenderer {
-    private final TextStyle textStyle;
-    private final TextRenderer textRenderer;
+    private final TextStyle style;
+    private final TextRenderer font;
 
     private final float minX;
     private final float minY;
     private final float maxX;
 
-    private float lastX;
-    private float lastY;
+    private float caretX;
+    private float caretY;
     private float scale;
 
     private boolean bold;
@@ -28,9 +25,11 @@ public class StatefulTextRenderer {
 
     private int indent;
 
-    public StatefulTextRenderer(TextStyle textStyle, TextRenderer textRenderer, float minX, float minY, float maxX) {
-        this.textStyle = textStyle;
-        this.textRenderer = textRenderer;
+    private boolean simulate;
+
+    public StatefulTextRenderer(TextStyle style, TextRenderer font, float minX, float minY, float maxX) {
+        this.style = style;
+        this.font = font;
         this.minX = minX;
         this.minY = minY;
         this.maxX = maxX;
@@ -38,22 +37,34 @@ public class StatefulTextRenderer {
         color = 0xFFFFFFFF;
     }
 
+    public float getCaretX() {
+        return caretX;
+    }
+
+    public float getCaretY() {
+        return caretY;
+    }
+
+    public void setSimulate(boolean simulate) {
+        this.simulate = simulate;
+    }
+
     public void newLine() {
-        if (lastX == minX) {
+        if (caretX == minX) {
             return;
         }
 
-        lastX = minX;
-        lastY += textRenderer.fontHeight * scale + textStyle.lineSpacingPx();
+        caretX = minX;
+        caretY += font.fontHeight * scale + style.lineSpacingPx();
     }
 
     public void newBlock() {
-        if (lastX == minX) {
+        if (caretX == minX) {
             return;
         }
 
-        lastX = minX;
-        lastY += textRenderer.fontHeight * scale + textStyle.blockSpacingPx();
+        caretX = minX;
+        caretY += font.fontHeight * scale + style.blockSpacingPx();
     }
 
     public void setIndent(int indent) {
@@ -130,12 +141,12 @@ public class StatefulTextRenderer {
 
     public void write(String text) {
         String drawnText = applyCurrentFormatting(text);
-        float textWidth = textRenderer.getStringWidth(drawnText) * scale;
-        boolean needsWrap = lastX + textWidth > maxX;
+        float textWidth = font.getStringWidth(drawnText) * scale;
+        boolean needsWrap = caretX + textWidth > maxX;
 
         if (StringUtils.isWhitespace(text)) {
             if (!needsWrap) {
-                lastX += scale * textWidth;
+                caretX += scale * textWidth;
             }
             return;
         }
@@ -145,19 +156,21 @@ public class StatefulTextRenderer {
         }
 
         GlStateManager.pushMatrix();
-        GlStateManager.translatef(lastX, lastY, 0);
+        GlStateManager.translatef(caretX, caretY, 0);
         GlStateManager.scalef(scale, scale, 1);
 
-        textRenderer.draw(drawnText, 0, 0, color);
+        if (!simulate) {
+            font.draw(drawnText, 0, 0, color);
+        }
 
         GlStateManager.popMatrix();
 
-        lastX += textWidth;
+        caretX += textWidth;
     }
 
     public void reset() {
-        lastX = minX;
-        lastY = minY;
+        caretX = minX;
+        caretY = minY;
         scale = 1f;
     }
 }

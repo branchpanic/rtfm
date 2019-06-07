@@ -3,6 +3,8 @@ package me.branchpanic.mods.rtfm.gui;
 import com.mojang.blaze3d.platform.GlStateManager;
 import me.branchpanic.mods.rtfm.api.DocEntry;
 import me.branchpanic.mods.rtfm.gui.text.StatefulTextRenderer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.GuiLighting;
@@ -11,9 +13,11 @@ import net.minecraft.client.util.Window;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.opengl.GL11;
 
+@Environment(EnvType.CLIENT)
 public class DocumentationScreen extends Screen {
     public static final Identifier BACKGROUND_TEXTURE = new Identifier("rtfm", "textures/gui/info.png");
 
@@ -27,13 +31,16 @@ public class DocumentationScreen extends Screen {
     public static final float HORIZONTAL_MARGIN_FACTOR = 0.2f;
     public static final float VERTICAL_MARGIN_FACTOR = 0.1f;
 
+    public static final int SCROLL_NOTCH_VELOCITY = 4;
+
     private final DocEntry entry;
     private final ItemStack representation;
 
     private final NinePatchRectangle textRectangle;
     private final TextStyle textStyle;
 
-    private MarkdownView view;
+    private StatefulTextRenderer textRenderer;
+    private MarkdownView document;
 
     private int left;
     private int right;
@@ -41,10 +48,13 @@ public class DocumentationScreen extends Screen {
     private int bottom;
 
     private int textLeft;
+    private int textRight;
     private int textTop;
-    private int textWidth;
-    private int textHeight;
+    private int textBottom;
 
+    private int scrollMin;
+
+    private float scrollVelocity;
     private float offsetY;
 
     public DocumentationScreen(DocEntry entry, ItemStack representation) {
@@ -78,16 +88,20 @@ public class DocumentationScreen extends Screen {
         super.init();
 
         left = (int) (HORIZONTAL_MARGIN_FACTOR * width);
-        top = (int) (VERTICAL_MARGIN_FACTOR * height);
         right = width - left;
+        top = (int) (VERTICAL_MARGIN_FACTOR * height);
         bottom = height - top;
 
         textLeft = left + BOX_LEFT + CONTENT_PADDING + textRectangle.borderSize();
+        textRight = Math.min(right - CONTENT_PADDING - textRectangle.borderSize(), maxTextColumnWidth());
         textTop = top + BOX_TOP + CONTENT_PADDING + textRectangle.borderSize();
-        textWidth = Math.min(right - CONTENT_PADDING - textRectangle.borderSize(), maxTextColumnWidth());
-        textHeight = bottom - CONTENT_PADDING - textRectangle.borderSize();
+        textBottom = bottom - CONTENT_PADDING - textRectangle.borderSize();
 
-        view = new MarkdownView(textStyle, entry.node(), new StatefulTextRenderer(textStyle, font, textLeft, textTop, textWidth));
+        textRenderer = new StatefulTextRenderer(textStyle, font, textLeft, textTop, textRight);
+        document = new MarkdownView(textStyle, entry.node(), textRenderer);
+
+        scrollMin = Math.min(-(document.calculateHeight() - textBottom / 2), 0);
+        offsetY = Math.max(offsetY, scrollMin);
     }
 
     @Override
@@ -101,6 +115,9 @@ public class DocumentationScreen extends Screen {
             font.draw(sizeMessage, (width - size) / 2f, (height - font.fontHeight) / 2f, 0xFFFFFFFF);
             return;
         }
+
+        offsetY = MathHelper.clamp(offsetY + 6 * scrollVelocity, scrollMin, 0);
+        scrollVelocity = 0.55f * scrollVelocity;
 
         textRectangle.draw(this, left + BOX_LEFT, top, (right - (left + BOX_LEFT)), (bottom - top));
 
@@ -124,37 +141,69 @@ public class DocumentationScreen extends Screen {
         float scaledWidth = window.getScaledWidth();
         float scaledHeight = window.getScaledHeight();
 
-        int scissorX = (int) (windowWidth * (textLeft / scaledWidth));
-        int scissorY = (int) (windowHeight * (textTop / scaledHeight));
-        int width = (int) (windowWidth * (textWidth / scaledWidth));
-        int height = (int) (windowHeight * (textHeight / scaledHeight));
+        int scissorX = screenToWindowX(textLeft);
+        int scissorY = screenToWindowY(textTop);
 
-        GL11.glScissor(scissorX, windowHeight - height - scissorY, width, height);
+        int scissorWidth = (int) (windowWidth * ((textRight - textLeft) / scaledWidth));
+        int scissorHeight = (int) (windowHeight * ((textBottom - textTop) / scaledHeight));
+
+        GL11.glScissor(scissorX, windowHeight - scissorHeight - scissorY, scissorWidth, scissorHeight);
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         GlStateManager.pushMatrix();
         GlStateManager.translatef(0, offsetY, 0);
-        view.render(mouseX, mouseY, partialTicks);
+        document.render(mouseX, mouseY, partialTicks);
         GlStateManager.popMatrix();
 
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (offsetY != 0) {
-            drawDashedHorizontalLine(textLeft, textTop - 3, textWidth, 0xFF313131);
+            drawDashedHorizontalLine(textLeft, textTop - 2, textRight - textLeft, 0xFF313131);
+        }
+
+        if (offsetY > scrollMin + textBottom) {
+            drawDashedHorizontalLine(textLeft, textBottom + 1, textRight - textLeft, 0xFF313131);
         }
     }
 
+    private int screenToWindowX(int x) {
+        Window window = MinecraftClient.getInstance().window;
+        return (int) (window.getWidth() * (x / (float) window.getScaledWidth()));
+    }
+
+    private int screenToWindowY(int y) {
+        Window window = MinecraftClient.getInstance().window;
+        return (int) (window.getHeight() * (y / (float) window.getScaledHeight()));
+    }
+
     private void drawDashedHorizontalLine(int x, int y, int length, int color) {
-        for (int i = x; i + 4 < length; i += 6) {
+        for (int i = x; i + 4 < x + length; i += 6) {
             fill(i, y, i + 4, y + 1, color);
         }
     }
 
     @Override
-    public boolean mouseScrolled(double double_1, double double_2, double amount) {
-        offsetY = (int) Math.min(offsetY + 4 * amount, 0);
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (scrollMin >= 0) {
+            return false;
+        }
+
+        scrollVelocity = (float) (SCROLL_NOTCH_VELOCITY * amount);
+
         return true;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (scrollMin >= 0) {
+            return false;
+        }
+
+        scrollVelocity = 0;
+        offsetY = (float) MathHelper.clamp(offsetY + deltaY, scrollMin, 0);
+
+        return false;
     }
 
     @Override
