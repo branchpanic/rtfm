@@ -34,18 +34,17 @@ public class DocumentationScreen extends Screen {
     public static final int SCROLL_NOTCH_VELOCITY = 4;
 
     private final DocEntry entry;
-    private final ItemStack representation;
+    private final ItemStack icon;
 
     private final NinePatchRectangle textRectangle;
     private final TextStyle textStyle;
 
-    private StatefulTextRenderer textRenderer;
-    private MarkdownView document;
+    private MarkdownView markdownView;
 
-    private int left;
-    private int right;
-    private int top;
-    private int bottom;
+    private int guiLeft;
+    private int guiRight;
+    private int guiTop;
+    private int guiBottom;
 
     private int textLeft;
     private int textRight;
@@ -55,12 +54,12 @@ public class DocumentationScreen extends Screen {
     private int scrollMin;
 
     private float scrollVelocity;
-    private float offsetY;
+    private float scrollAmount;
 
-    public DocumentationScreen(DocEntry entry, ItemStack representation) {
+    public DocumentationScreen(DocEntry entry, ItemStack icon) {
         super(new TextComponent("RTFM Documentation"));
         this.entry = entry;
-        this.representation = representation;
+        this.icon = icon;
 
         textStyle = ImmutableTextStyle.builder()
                 .lineSpacingPx(1.5f)
@@ -80,28 +79,26 @@ public class DocumentationScreen extends Screen {
     }
 
     private int maxTextColumnWidth() {
-        return font.getStringWidth(StringUtils.repeat("@", 75));
+        return font.getStringWidth(StringUtils.repeat("@", 72));
     }
 
     @Override
     protected void init() {
-        super.init();
+        guiLeft = (int) (HORIZONTAL_MARGIN_FACTOR * width);
+        guiRight = width - guiLeft;
+        guiTop = (int) (VERTICAL_MARGIN_FACTOR * height);
+        guiBottom = height - guiTop;
 
-        left = (int) (HORIZONTAL_MARGIN_FACTOR * width);
-        right = width - left;
-        top = (int) (VERTICAL_MARGIN_FACTOR * height);
-        bottom = height - top;
+        textLeft = guiLeft + BOX_LEFT + CONTENT_PADDING + textRectangle.borderSize();
+        textRight = Math.min(guiRight - CONTENT_PADDING - textRectangle.borderSize(), maxTextColumnWidth());
+        textTop = guiTop + BOX_TOP + CONTENT_PADDING + textRectangle.borderSize();
+        textBottom = guiBottom - CONTENT_PADDING - textRectangle.borderSize();
 
-        textLeft = left + BOX_LEFT + CONTENT_PADDING + textRectangle.borderSize();
-        textRight = Math.min(right - CONTENT_PADDING - textRectangle.borderSize(), maxTextColumnWidth());
-        textTop = top + BOX_TOP + CONTENT_PADDING + textRectangle.borderSize();
-        textBottom = bottom - CONTENT_PADDING - textRectangle.borderSize();
+        StatefulTextRenderer textRenderer = new StatefulTextRenderer(textStyle, font, textLeft, textTop, textRight);
+        markdownView = new MarkdownView(textStyle, entry.node(), textRenderer);
 
-        textRenderer = new StatefulTextRenderer(textStyle, font, textLeft, textTop, textRight);
-        document = new MarkdownView(textStyle, entry.node(), textRenderer);
-
-        scrollMin = Math.min(-(document.calculateHeight() - textBottom / 2), 0);
-        offsetY = Math.max(offsetY, scrollMin);
+        scrollMin = Math.min(-(markdownView.calculateHeight() - textBottom / 2), 0);
+        scrollAmount = Math.max(scrollAmount, scrollMin);
     }
 
     @Override
@@ -116,20 +113,20 @@ public class DocumentationScreen extends Screen {
             return;
         }
 
-        offsetY = MathHelper.clamp(offsetY + 6 * scrollVelocity, scrollMin, 0);
+        scrollAmount = MathHelper.clamp(scrollAmount + 6 * scrollVelocity, scrollMin, 0);
         scrollVelocity = 0.55f * scrollVelocity;
 
-        textRectangle.draw(this, left + BOX_LEFT, top, (right - (left + BOX_LEFT)), (bottom - top));
+        textRectangle.draw(this, guiLeft + BOX_LEFT, guiTop, (guiRight - (guiLeft + BOX_LEFT)), (guiBottom - guiTop));
 
         MinecraftClient.getInstance().getTextureManager().bindTexture(BACKGROUND_TEXTURE);
-        blit(left, top, 0, 0, CORE_BACKGROUND_WIDTH, CORE_BACKGROUND_HEIGHT);
+        blit(guiLeft, guiTop, 0, 0, CORE_BACKGROUND_WIDTH, CORE_BACKGROUND_HEIGHT);
 
         GuiLighting.enable();
 
         GlStateManager.pushMatrix();
-        GlStateManager.translatef(left + 8f, top + 8f, 0f);
+        GlStateManager.translatef(guiLeft + 8f, guiTop + 8f, 0f);
         GlStateManager.scalef(2f, 2f, 2f);
-        itemRenderer.renderGuiItem(representation, 0, 0);
+        itemRenderer.renderGuiItem(icon, 0, 0);
         GlStateManager.popMatrix();
 
         GuiLighting.disable();
@@ -152,17 +149,17 @@ public class DocumentationScreen extends Screen {
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         GlStateManager.pushMatrix();
-        GlStateManager.translatef(0, offsetY, 0);
-        document.render(mouseX, mouseY, partialTicks);
+        GlStateManager.translatef(0, scrollAmount, 0);
+        markdownView.render(mouseX, mouseY, partialTicks);
         GlStateManager.popMatrix();
 
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
-        if (offsetY != 0) {
+        if (scrollAmount != 0) {
             drawDashedHorizontalLine(textLeft, textTop - 2, textRight - textLeft, 0xFF313131);
         }
 
-        if (offsetY > scrollMin + textBottom) {
+        if (scrollAmount > scrollMin + textBottom) {
             drawDashedHorizontalLine(textLeft, textBottom + 1, textRight - textLeft, 0xFF313131);
         }
     }
@@ -201,9 +198,9 @@ public class DocumentationScreen extends Screen {
         }
 
         scrollVelocity = 0;
-        offsetY = (float) MathHelper.clamp(offsetY + deltaY, scrollMin, 0);
+        scrollAmount = (float) MathHelper.clamp(scrollAmount + deltaY, scrollMin, 0);
 
-        return false;
+        return true;
     }
 
     @Override

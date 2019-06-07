@@ -28,8 +28,8 @@ import java.nio.file.Paths;
 public enum RtfmMod implements ClientModInitializer {
     @SuppressWarnings("unused") INSTANCE;
 
-    private static final String KEY_BIND_SECTION = "RTFM";
-    private static final FabricKeyBinding HELP_KEY_BINDING = FabricKeyBinding.Builder.create(
+    public static final String KEY_BIND_SECTION = "RTFM";
+    public static final FabricKeyBinding HELP_KEY_BINDING = FabricKeyBinding.Builder.create(
             new Identifier("rtfm", "help"),
             InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_CONTROL,
@@ -41,6 +41,12 @@ public enum RtfmMod implements ClientModInitializer {
 
     public void showEntry(DocEntry entry, ItemStack representation) {
         MinecraftClient.getInstance().openScreen(new DocumentationScreen(entry, representation));
+    }
+
+    // TODO: Offer a cached "entryExists" method for use in stuff like rendering to prevent constant
+
+    public DocLoader getDocLoader() {
+        return docLoader;
     }
 
     @Override
