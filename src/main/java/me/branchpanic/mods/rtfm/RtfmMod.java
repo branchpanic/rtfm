@@ -3,7 +3,7 @@ package me.branchpanic.mods.rtfm;
 import me.branchpanic.mods.rtfm.api.DocEntry;
 import me.branchpanic.mods.rtfm.api.DocLoader;
 import me.branchpanic.mods.rtfm.gui.DocumentationScreen;
-import me.branchpanic.mods.rtfm.impl.ImmutableDirectoryDocLoader;
+import me.branchpanic.mods.rtfm.impl.ResourcePackDocLoader;
 import me.branchpanic.mods.rtfm.mixin.EnhancedContainerScreen;
 import me.shedaniel.cloth.hooks.ClothClientHooks;
 import net.fabricmc.api.ClientModInitializer;
@@ -19,8 +19,6 @@ import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-
-import java.nio.file.Paths;
 
 /**
  * The RtfmMod singleton is the active instance of RTFM.
@@ -51,9 +49,7 @@ public enum RtfmMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        docLoader = ImmutableDirectoryDocLoader.builder()
-                .root(Paths.get("."))
-                .build();
+        docLoader = new ResourcePackDocLoader();
 
         logger.info("rtfm: using documentation loader: {}", docLoader.toString());
 
@@ -79,6 +75,6 @@ public enum RtfmMod implements ClientModInitializer {
             return ActionResult.SUCCESS;
         });
 
-        logger.info("rtfm: ready on client");
+        logger.info("rtfm: ready");
     }
 }
