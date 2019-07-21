@@ -24,11 +24,17 @@ public interface DirectoryDocRetriever extends DocRetriever {
     Path root();
 
     @Override
-    default Optional<DocEntry> retrieve(String type, Identifier name) {
-        Path expectedPath = Paths.get(root().toString(), type, name.getNamespace(), name.getPath() + ".md");
+    default Optional<DocEntry> retrieve(String type, String languageCode, Identifier name) {
+        Path localizedPath = Paths.get(root().toString(), type, name.getNamespace(), name.getPath() + "." + languageCode.toLowerCase() + ".md");
 
-        if (Files.exists(expectedPath)) {
-            return Optional.of(new FileDocEntry(Parser.builder().build(), expectedPath));
+        if (Files.exists(localizedPath)) {
+            return Optional.of(new FileDocEntry(Parser.builder().build(), localizedPath));
+        }
+
+        Path unlocalizedPath = Paths.get(root().toString(), type, name.getNamespace(), name.getPath() + ".md");
+
+        if (Files.exists(unlocalizedPath)) {
+            return Optional.of(new FileDocEntry(Parser.builder().build(), localizedPath));
         }
 
         return Optional.empty();

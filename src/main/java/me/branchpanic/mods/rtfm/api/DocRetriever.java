@@ -15,9 +15,10 @@ public interface DocRetriever {
      *
      * @param type Type of entry to load, such as "item" or "block".
      * @param name Name of the entry to load.
+     * @param languageCode Target language to load for, if possible.
      * @return An optional containing either the desired entry or nothing if it could not be loaded.
      */
-    Optional<DocEntry> retrieve(String type, Identifier name);
+    Optional<DocEntry> retrieve(String type, String languageCode, Identifier name);
 
     /**
      * Signals this DocRetriever that its contents may have changed. For example, if a resource pack is reloaded,
