@@ -2,6 +2,7 @@ package me.branchpanic.mods.rtfm.mixin;
 
 import me.branchpanic.mods.rtfm.RtfmMod;
 import net.minecraft.ChatFormat;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.registry.Registry;
@@ -18,7 +19,10 @@ public class ScreenMixin {
     @Inject(method = "getTooltipFromItem(Lnet/minecraft/item/ItemStack;)Ljava/util/List;", at = @At("RETURN"))
     public void onTooltipBuilt(ItemStack stack, CallbackInfoReturnable<List<String>> cir) {
         RtfmMod.INSTANCE.getDocRetriever()
-                .retrieve("item", Registry.ITEM.getId(stack.getItem()))
-                .ifPresent(e -> cir.getReturnValue().add(ChatFormat.DARK_GRAY + "Press " + RtfmMod.HELP_KEY_BINDING.getLocalizedName() + " for more info"));
+                .retrieve(
+                        "item",
+                        MinecraftClient.getInstance().getLanguageManager().getLanguage().getCode(),
+                        Registry.ITEM.getId(stack.getItem())
+                ).ifPresent(e -> cir.getReturnValue().add(ChatFormat.DARK_GRAY + "Press " + RtfmMod.HELP_KEY_BINDING.getLocalizedName() + " for more info"));
     }
 }

@@ -41,15 +41,13 @@ public enum RtfmMod implements ClientModInitializer {
         MinecraftClient.getInstance().openScreen(new DocumentationScreen(entry, representation));
     }
 
-    // TODO: Offer a cached "entryExists" method for use in stuff like rendering to prevent constant
-
     public DocRetriever getDocRetriever() {
         return docRetriever;
     }
 
     @Override
     public void onInitializeClient() {
-        docRetriever = new ResourcePackDocRetriever();
+        docRetriever = ResourcePackDocRetriever.newInstance();
 
         logger.info("rtfm: using documentation loader: {}", docRetriever.toString());
 
@@ -70,7 +68,11 @@ public enum RtfmMod implements ClientModInitializer {
                 return ActionResult.PASS;
             }
 
-            docRetriever.retrieve("item", Registry.ITEM.getId(selectedStack.getItem())).ifPresent(e -> showEntry(e, selectedStack));
+            docRetriever.retrieve(
+                    "item",
+                    MinecraftClient.getInstance().getLanguageManager().getLanguage().getCode(),
+                    Registry.ITEM.getId(selectedStack.getItem())
+            ).ifPresent(e -> showEntry(e, selectedStack));
 
             return ActionResult.SUCCESS;
         });
