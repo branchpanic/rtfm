@@ -14,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.opengl.GL11;
 
 @Environment(EnvType.CLIENT)
@@ -26,7 +25,7 @@ public class DocumentationScreen extends Screen {
 
     public static final int BOX_LEFT = 54;
     public static final int BOX_TOP = 0;
-    public static final int CONTENT_PADDING = 5;
+    public static final int CONTENT_PADDING = 8;
 
     public static final float HORIZONTAL_MARGIN_FACTOR = 0.2f;
     public static final float VERTICAL_MARGIN_FACTOR = 0.1f;
@@ -62,8 +61,8 @@ public class DocumentationScreen extends Screen {
         this.icon = icon;
 
         textStyle = ImmutableTextStyle.builder()
-                .lineSpacingPx(1.5f)
-                .blockSpacingPx(6f)
+                .lineSpacingPx(1.8f)
+                .blockSpacingPx(8f)
                 .putHeadingScales(1, 1.75f)
                 .putHeadingScales(2, 1.5f)
                 .putHeadingScales(3, 1.25f)
@@ -79,7 +78,7 @@ public class DocumentationScreen extends Screen {
     }
 
     private int maxTextColumnWidth() {
-        return font.getStringWidth(StringUtils.repeat("@", 72));
+        return 600;
     }
 
     @Override
@@ -116,10 +115,16 @@ public class DocumentationScreen extends Screen {
         scrollAmount = MathHelper.clamp(scrollAmount + 6 * scrollVelocity, scrollMin, 0);
         scrollVelocity = 0.55f * scrollVelocity;
 
+        // To prevent smooth scrolling from lasting too long, we just cut it off after the velocity is negligible.
+        if (Math.abs(scrollVelocity) <= 0.005) {
+            scrollVelocity = 0;
+        }
+
         textRectangle.draw(this, guiLeft + BOX_LEFT, guiTop, (guiRight - (guiLeft + BOX_LEFT)), (guiBottom - guiTop));
 
         MinecraftClient.getInstance().getTextureManager().bindTexture(BACKGROUND_TEXTURE);
         blit(guiLeft, guiTop, 0, 0, CORE_BACKGROUND_WIDTH, CORE_BACKGROUND_HEIGHT);
+        drawScrollBar();
 
         GuiLighting.enable();
 
@@ -156,12 +161,40 @@ public class DocumentationScreen extends Screen {
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (scrollAmount != 0) {
-            drawDashedHorizontalLine(textLeft, textTop - 2, textRight - textLeft, 0xFF313131);
+            drawDashedHorizontalLine(
+                    textLeft,
+                    textTop - CONTENT_PADDING / 4,
+                    guiRight - textLeft - CONTENT_PADDING - textRectangle.borderSize(),
+                    0xFF313131
+            );
         }
 
         if (scrollAmount > scrollMin + textBottom) {
-            drawDashedHorizontalLine(textLeft, textBottom + 1, textRight - textLeft, 0xFF313131);
+            drawDashedHorizontalLine(
+                    textLeft,
+                    textBottom + CONTENT_PADDING / 4,
+                    guiRight - textLeft - CONTENT_PADDING - textRectangle.borderSize(),
+                    0xFF313131
+            );
         }
+    }
+
+    private void drawScrollBar() {
+        int contentHeight = -scrollMin;
+        int contentWindowHeight = (guiBottom - guiTop) - 2 * CONTENT_PADDING;
+
+        int barSize = (int) ((contentWindowHeight / (float) contentHeight) * contentWindowHeight);
+
+        int barTop = (guiTop + CONTENT_PADDING) - (int) ((scrollAmount / (float) contentHeight) * (contentWindowHeight - 2 * barSize));
+        int barBottom = barTop + barSize;
+
+        fill(
+                guiRight - textRectangle.borderSize() - 2,
+                barTop + textRectangle.borderSize(),
+                guiRight - textRectangle.borderSize(),
+                barBottom,
+                0xFFFF0000
+        );
     }
 
     private int screenToWindowX(int x) {
