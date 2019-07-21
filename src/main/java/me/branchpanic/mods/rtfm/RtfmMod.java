@@ -47,7 +47,7 @@ public enum RtfmMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        docRetriever = ResourcePackDocRetriever.newInstance();
+        docRetriever = ResourcePackDocRetriever.newInstance(25, 15);
 
         logger.info("rtfm: using documentation loader: {}", docRetriever.toString());
 

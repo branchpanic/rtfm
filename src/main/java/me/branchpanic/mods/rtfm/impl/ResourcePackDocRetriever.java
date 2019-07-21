@@ -19,24 +19,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A ResourcePackDocRetriever retrieves DocEntries from active resource packs.
+ * A ResourcePackDocRetriever retrieves DocEntries from active resource packs, caching entries as they are loaded.
  */
 public class ResourcePackDocRetriever implements DocRetriever {
-
-    // We'll need to keep this relatively low because modded Minecraft eats enough memory as-is.
-    public static final int MAX_CACHE_SIZE = 25;
-
     private final LoadingCache<CacheKey, Optional<Node>> entryCache;
 
     public ResourcePackDocRetriever(LoadingCache<CacheKey, Optional<Node>> entryCache) {
         this.entryCache = entryCache;
     }
 
-    public static ResourcePackDocRetriever newInstance() {
+    public static ResourcePackDocRetriever newInstance(int cacheSize, long cacheTimeoutMinutes) {
         return new ResourcePackDocRetriever(
                 CacheBuilder.newBuilder()
-                        .maximumSize(MAX_CACHE_SIZE)
-                        .expireAfterAccess(15, TimeUnit.MINUTES)  // Won't compile with a Duration... strange
+                        .maximumSize(cacheSize)
+                        .expireAfterAccess(cacheTimeoutMinutes, TimeUnit.MINUTES)  // Won't compile with a Duration... strange
                         .build(new CacheLoader<CacheKey, Optional<Node>>() {
                             @Override
                             public Optional<Node> load(CacheKey key) {
