@@ -5,9 +5,10 @@ import net.minecraft.util.Identifier;
 import java.util.Optional;
 
 /**
- * A DocLoader loads mod documentation from an arbitrary source.
+ * A DocRetriever loads mod documentation from an arbitrary source.
  */
-public interface DocLoader {
+@FunctionalInterface
+public interface DocRetriever {
 
     /**
      * Retrieves a documentation entry by name.
@@ -17,4 +18,14 @@ public interface DocLoader {
      * @return An optional containing either the desired entry or nothing if it could not be loaded.
      */
     Optional<DocEntry> retrieve(String type, Identifier name);
+
+    /**
+     * Signals this DocRetriever that its contents may have changed. For example, if a resource pack is reloaded,
+     * then there's a chance that documentation entries will be different.
+     * <p>
+     * If no caching is done, then there's no need to implement this.
+     */
+    default void refresh() {
+        // NO-OP
+    }
 }

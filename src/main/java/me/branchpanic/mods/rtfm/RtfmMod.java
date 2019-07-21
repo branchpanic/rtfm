@@ -1,9 +1,9 @@
 package me.branchpanic.mods.rtfm;
 
 import me.branchpanic.mods.rtfm.api.DocEntry;
-import me.branchpanic.mods.rtfm.api.DocLoader;
+import me.branchpanic.mods.rtfm.api.DocRetriever;
 import me.branchpanic.mods.rtfm.gui.DocumentationScreen;
-import me.branchpanic.mods.rtfm.impl.ResourcePackDocLoader;
+import me.branchpanic.mods.rtfm.impl.ResourcePackDocRetriever;
 import me.branchpanic.mods.rtfm.mixin.EnhancedContainerScreen;
 import me.shedaniel.cloth.hooks.ClothClientHooks;
 import net.fabricmc.api.ClientModInitializer;
@@ -35,7 +35,7 @@ public enum RtfmMod implements ClientModInitializer {
     ).build();
 
     private Logger logger = LogManager.getLogger("rtfm");
-    private DocLoader docLoader;
+    private DocRetriever docRetriever;
 
     public void showEntry(DocEntry entry, ItemStack representation) {
         MinecraftClient.getInstance().openScreen(new DocumentationScreen(entry, representation));
@@ -43,15 +43,15 @@ public enum RtfmMod implements ClientModInitializer {
 
     // TODO: Offer a cached "entryExists" method for use in stuff like rendering to prevent constant
 
-    public DocLoader getDocLoader() {
-        return docLoader;
+    public DocRetriever getDocRetriever() {
+        return docRetriever;
     }
 
     @Override
     public void onInitializeClient() {
-        docLoader = new ResourcePackDocLoader();
+        docRetriever = new ResourcePackDocRetriever();
 
-        logger.info("rtfm: using documentation loader: {}", docLoader.toString());
+        logger.info("rtfm: using documentation loader: {}", docRetriever.toString());
 
         ClothClientHooks.SCREEN_KEY_PRESSED.register((client, screen, keyCode, scanCode, modifiers) -> {
             if (!(screen instanceof AbstractContainerScreen) || screen.getFocused() != null) {
@@ -70,7 +70,7 @@ public enum RtfmMod implements ClientModInitializer {
                 return ActionResult.PASS;
             }
 
-            docLoader.retrieve("item", Registry.ITEM.getId(selectedStack.getItem())).ifPresent(e -> showEntry(e, selectedStack));
+            docRetriever.retrieve("item", Registry.ITEM.getId(selectedStack.getItem())).ifPresent(e -> showEntry(e, selectedStack));
 
             return ActionResult.SUCCESS;
         });

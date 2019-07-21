@@ -1,7 +1,7 @@
 package me.branchpanic.mods.rtfm.impl;
 
 import me.branchpanic.mods.rtfm.api.DocEntry;
-import me.branchpanic.mods.rtfm.api.DocLoader;
+import me.branchpanic.mods.rtfm.api.DocRetriever;
 import net.minecraft.util.Identifier;
 import org.commonmark.parser.Parser;
 import org.immutables.value.Value;
@@ -16,7 +16,7 @@ import java.util.Optional;
  * purposes and probably shouldn't be used in production.
  */
 @Value.Immutable
-public interface DirectoryDocLoader extends DocLoader {
+public interface DirectoryDocRetriever extends DocRetriever {
 
     /**
      * Returns the root path that this DirectoryDocLoader is searching in.

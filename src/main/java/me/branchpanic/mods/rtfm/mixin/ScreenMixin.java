@@ -16,8 +16,8 @@ import java.util.List;
 public class ScreenMixin {
 
     @Inject(method = "getTooltipFromItem(Lnet/minecraft/item/ItemStack;)Ljava/util/List;", at = @At("RETURN"))
-    public void onTooltipRetrievedFromItem(ItemStack stack, CallbackInfoReturnable<List<String>> cir) {
-        RtfmMod.INSTANCE.getDocLoader()
+    public void onTooltipBuilt(ItemStack stack, CallbackInfoReturnable<List<String>> cir) {
+        RtfmMod.INSTANCE.getDocRetriever()
                 .retrieve("item", Registry.ITEM.getId(stack.getItem()))
                 .ifPresent(e -> cir.getReturnValue().add(ChatFormat.DARK_GRAY + "Press " + RtfmMod.HELP_KEY_BINDING.getLocalizedName() + " for more info"));
     }
